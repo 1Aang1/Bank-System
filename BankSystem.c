@@ -223,22 +223,20 @@ void transfer(const char *source_iban, const char *destination_iban, double amou
         char line[100];
         double source_amount;
         double destination_amount;
+        char source_owner[30];
+        char destination_owner[30];
 
-        // Read source account amount
-        fseek(source_file, 0, SEEK_SET);        // Move file pointer to the beginning of the file
-        fgets(line, sizeof(line), source_file); // Read "Owner: ..."
-        fgets(line, sizeof(line), source_file); // Read "IBAN: ..."
-        fgets(line, sizeof(line), source_file); // Read "Coin: ..."
-        fgets(line, sizeof(line), source_file); // Read "Amount: ..."
-        sscanf(line, "Amount: %lf", &source_amount);
+        // Read source account information
+        fscanf(source_file, "%*[^:]:%[^\n]", source_owner);
+        fscanf(source_file, "%*[^:]:%*[^\n]");
+        fscanf(source_file, "%*[^:]:%*[^\n]");
+        fscanf(source_file, "%*[^:]:%lf", &source_amount);
 
-        // Read destination account amount
-        fseek(destination_file, 0, SEEK_SET);        // Move file pointer to the beginning of the file
-        fgets(line, sizeof(line), destination_file); // Read "Owner: ..."
-        fgets(line, sizeof(line), destination_file); // Read "IBAN: ..."
-        fgets(line, sizeof(line), destination_file); // Read "Coin: ..."
-        fgets(line, sizeof(line), destination_file); // Read "Amount: ..."
-        sscanf(line, "Amount: %lf", &destination_amount);
+        // Read destination account information
+        fscanf(destination_file, "%*[^:]:%[^\n]",destination_owner);
+        fscanf(destination_file, "%*[^:]:%*[^\n]");
+        fscanf(destination_file, "%*[^:]:%*[^\n]");
+        fscanf(destination_file, "%*[^:]:%lf", &destination_amount);
 
         // Check if source account has sufficient balance
         if (source_amount >= amount)
@@ -249,11 +247,11 @@ void transfer(const char *source_iban, const char *destination_iban, double amou
 
             // Rewind source file and write updated source amount
             fseek(source_file, 0, SEEK_SET);
-            fprintf(source_file, "Owner: %s\nIBAN: %s\nCoin: %s\nAmount: %.2f\n", source_iban, source_iban, "USD", source_amount);
+            fprintf(source_file, "Owner: %s\nIBAN: %s\nCoin: %s\nAmount: %.2f\n", source_owner, source_iban, "USD", source_amount);
 
             // Rewind destination file and write updated destination amount
             fseek(destination_file, 0, SEEK_SET);
-            fprintf(destination_file, "Owner: %s\nIBAN: %s\nCoin: %s\nAmount: %.2f\n", destination_iban, destination_iban, "USD", destination_amount);
+            fprintf(destination_file, "Owner: %s\nIBAN: %s\nCoin: %s\nAmount: %.2f\n", destination_owner, destination_iban, "USD", destination_amount);
 
             printf("Transfer successful.\n");
         }
@@ -297,7 +295,7 @@ void create_accounts_folder()
     struct stat st = {0};
     if (stat(ACCOUNTS_FOLDER, &st) == -1)
     {
-        mkdir(ACCOUNTS_FOLDER,0777);
+        mkdir(ACCOUNTS_FOLDER);
     }
 }
 
